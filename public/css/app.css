@@ -1,0 +1,17 @@
+/* ==============================
+   Poste Queimado — Overrides síncronos
+   (Estilos principais via Tailwind CDN, configurado em
+    resources/views/partials/head-assets.blade.php)
+
+   IMPORTANTE: dimensões do Leaflet ficam aqui (não em utility classes do
+   Tailwind CDN) porque o Leaflet mede o container ANTES do Tailwind Play
+   processar as classes em JS — resultando em mapa 0px de altura.
+   ============================== */
+
+#mapa          { width: 100%; height: 280px; }
+#mapa-detalhe  { width: 100%; height: 220px; }
+#mapa-admin    { width: 100%; height: 500px; }
+
+/* Garante que o Leaflet popup respeite a tipografia do app */
+.leaflet-popup-content { font-family: 'Segoe UI', system-ui, sans-serif; }
+.leaflet-popup-content i { font-family: 'Font Awesome 6 Free'; font-weight: 900; }
