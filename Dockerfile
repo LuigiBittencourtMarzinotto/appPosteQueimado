@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+COPY --from=composer:2.7 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www
 
@@ -16,8 +16,7 @@ WORKDIR /var/www
 COPY . .
 
 # Instalar dependências PHP (composer install)
-RUN composer config --global policy.advisories.block false \
-    && composer install --optimize-autoloader --no-interaction
+RUN composer install --optimize-autoloader --no-interaction     
 
 # Permissões
 RUN chown -R www-data:www-data /var/www \
@@ -25,7 +24,7 @@ RUN chown -R www-data:www-data /var/www \
     && chmod -R 775 /var/www/bootstrap/cache
 
 # Entrypoint
-RUN chmod +x /var/www/docker/entrypoint.sh
+CMD ["php-fpm"]
 
 EXPOSE 9000
 ENTRYPOINT ["/var/www/docker/entrypoint.sh"]
