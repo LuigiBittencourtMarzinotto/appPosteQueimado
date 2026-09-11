@@ -30,4 +30,4 @@ CMD ["php-fpm"]
 # 9000 = php-fpm (usado pelo nginx do docker-compose local)
 # 8080 = nginx interno (usado no Railway, via $PORT)
 EXPOSE 9000 8080
-ENTRYPOINT ["/var/www/docker/entrypoint.sh"]
+ENTRYPOINT ["sh", "/var/www/docker/entrypoint.sh"]
