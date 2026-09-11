@@ -3,9 +3,10 @@ FROM php:8.2-fpm
 # Dependências do sistema
 RUN apt-get update && apt-get install -y \
     git curl libpng-dev libonig-dev libxml2-dev \
-    libzip-dev zip unzip \
+    libzip-dev zip unzip nginx \
     && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+    && apt-get clean && rm -rf /var/lib/apt/lists/* \
+    && rm -f /etc/nginx/sites-enabled/default
 
 # Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -27,5 +28,7 @@ RUN chown -R www-data:www-data /var/www \
 # Entrypoint
 RUN chmod +x /var/www/docker/entrypoint.sh
 
-EXPOSE 9000
+# 9000 = php-fpm (usado pelo nginx do docker-compose local)
+# 8080 = nginx interno (usado no Railway, via $PORT)
+EXPOSE 9000 8080
 ENTRYPOINT ["/var/www/docker/entrypoint.sh"]

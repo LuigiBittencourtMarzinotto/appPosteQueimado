@@ -11,6 +11,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        // O TLS termina no proxy do Railway, que encaminha HTTP para o
+        // container. Sem confiar nos headers X-Forwarded-*, o Laravel gera
+        // links http:// e o navegador bloqueia (mixed content / loop).
+        $middleware->trustProxies(at: '*');
+
         $middleware->alias([
             'is_admin' => \App\Http\Middleware\IsAdmin::class,
         ]);
