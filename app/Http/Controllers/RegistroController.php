@@ -8,19 +8,44 @@ use App\Models\Foto;
 
 class RegistroController extends Controller
 {
+    /** Status válidos, na ordem em que aparecem na interface. */
+    private const STATUS = ['PENDENTE', 'EM_ANDAMENTO', 'RESOLVIDO'];
+
     public function home()
     {
-        return view('home');
+        $contagens = $this->contagens();
+
+        $recentes = Registro::with('fotos')
+            ->where('id_user', auth()->id())
+            ->orderByDesc('created_at')
+            ->take(3)
+            ->get();
+
+        return view('home', compact('contagens', 'recentes'));
     }
 
-    public function index()
+    public function index(Request $request)
     {
+        $status = in_array($request->status, self::STATUS, true) ? $request->status : null;
+        $busca  = trim((string) $request->busca);
+
         $registros = Registro::with('fotos')
             ->where('id_user', auth()->id())
+            ->when($status, fn ($q) => $q->where('status', $status))
+            ->when($busca !== '', fn ($q) => $q->where(function ($q) use ($busca) {
+                $q->where('titulo', 'like', "%{$busca}%")
+                  ->orWhere('endereco_texto', 'like', "%{$busca}%")
+                  ->orWhere('descricao', 'like', "%{$busca}%");
+            }))
             ->orderByDesc('created_at')
             ->get();
 
-        return view('registros.index', compact('registros'));
+        return view('registros.index', [
+            'registros' => $registros,
+            'contagens' => $this->contagens(),
+            'status'    => $status,
+            'busca'     => $busca,
+        ]);
     }
 
     public function create()
@@ -67,15 +92,32 @@ class RegistroController extends Controller
             ]);
         }
 
-        return redirect()->route('registros.index')->with('sucesso', 'Registro enviado com sucesso!');
+        return redirect()->route('registros.show', $registro->id)
+            ->with('sucesso', 'Registro enviado! Acompanhe o andamento por aqui.');
     }
 
     public function show($id)
     {
-        $registro = Registro::with('fotos', 'usuario')
+        $registro = Registro::with('fotos', 'usuario', 'logs')
             ->where('id_user', auth()->id())
             ->findOrFail($id);
 
         return view('registros.show', compact('registro'));
+    }
+
+    /** Quantidade de registros do usuário por status, para os filtros e cartões. */
+    private function contagens(): array
+    {
+        $porStatus = Registro::where('id_user', auth()->id())
+            ->selectRaw('status, COUNT(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status');
+
+        return [
+            'total'        => (int) $porStatus->sum(),
+            'PENDENTE'     => (int) ($porStatus['PENDENTE']     ?? 0),
+            'EM_ANDAMENTO' => (int) ($porStatus['EM_ANDAMENTO'] ?? 0),
+            'RESOLVIDO'    => (int) ($porStatus['RESOLVIDO']    ?? 0),
+        ];
     }
 }

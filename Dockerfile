@@ -16,7 +16,8 @@ WORKDIR /var/www
 COPY . .
 
 # Instalar dependências PHP (composer install)
-RUN composer install --optimize-autoloader --no-interaction
+RUN composer config --global policy.advisories.block false \
+    && composer install --optimize-autoloader --no-interaction
 
 # Permissões
 RUN chown -R www-data:www-data /var/www \
